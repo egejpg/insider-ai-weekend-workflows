@@ -1,0 +1,162 @@
+{
+  "name": "message_summarizer_slack",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        0
+      ],
+      "id": "019dc617-3243-463c-979c-64004f06ca16",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "search",
+        "query": "in:#social ",
+        "sort": "asc",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "60fef7c8-47ab-46fc-9157-4ab85a47bb30",
+      "name": "Search for messages",
+      "webhookId": "e11513ca-7372-4871-97e1-3197a347cec3",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "1nrH1miNojtBVzEA",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Summarize the following Slack messages in 50 words, grouped by author. Provide a concise overview of key points, themes, and any action items. Return in plain text, not markdown.\n\n{{ $input.all().map(item => `${item.json.username.replace(/\\./, ' ')}: ${item.json.text}` ) }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "f70037c6-2a02-48e1-8875-6522f1eb5af0",
+      "name": "AI Agent",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        288,
+        208
+      ],
+      "id": "b16d1bb2-1b2a-4613-b648-9690ee4882e9",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "55WLL7fNZtDJKOiT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A1EGK7JG0",
+          "mode": "list",
+          "cachedResultName": "all-insider-ai-weekend"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        0
+      ],
+      "id": "0d587403-6ad5-4cf6-ae31-6c7499721cc5",
+      "name": "Send a message",
+      "webhookId": "0aa42e1e-730f-4b57-9d53-658c55c10ae3",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "1nrH1miNojtBVzEA",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search for messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search for messages": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1bd182c9-a0b4-4988-bbc9-142320b96d90",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "95e561f0a17674229591dfae8230e467cc188046d6cc4f73afcfa213cc68aef0"
+  },
+  "id": "D2gWWjxDAdkpi3LO",
+  "tags": []
+}

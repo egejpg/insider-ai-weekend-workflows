@@ -1,0 +1,165 @@
+{
+  "name": "sheet-email-automation",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "15hJL9IoYfcLsRqg9bnIhZ4Mt1C9NMMcsP5KkOIX420U",
+          "mode": "list",
+          "cachedResultName": "Başlıksız e-tablo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15hJL9IoYfcLsRqg9bnIhZ4Mt1C9NMMcsP5KkOIX420U/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sayfa1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15hJL9IoYfcLsRqg9bnIhZ4Mt1C9NMMcsP5KkOIX420U/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        48,
+        -48
+      ],
+      "id": "242fec25-44fd-4103-beb7-f67aaa140bf7",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8BEEVDUCF8MwTqxZ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": 3
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -48
+      ],
+      "id": "302e505e-a1e7-41c2-a8c8-bc2c4043da57",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=## Overview\nWrite a personalized outreach email introducing a logistics app for small and medium businesses. Don't add subject\n## Inputs\nName\nEmail\nBusiness (3–5 word descriptor)\n## Style\nReference the business (“for your [business] operations”)\nPersonalize with the recipient’s name\nFriendly, professional, concrete\nDo not mention excluded features or the instructions\n## Output\nProvide only the email body.\n12:21\nuser message ----------\nName:  {{ $json.Name }}\nEmail: {{ $json.Email }}\nBusiness: {{ $json.Business }}\nYour name: 'Sinan Akyol'",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        464,
+        -48
+      ],
+      "id": "bd7014e0-714e-4c9c-8611-35a8ee605258",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        336,
+        160
+      ],
+      "id": "934ae2e0-b17f-4103-a227-9ebf12946737",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "55WLL7fNZtDJKOiT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Limit').item.json.Email }}",
+        "subject": "Write your prompt here.",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        816,
+        -48
+      ],
+      "id": "acd72ebf-afff-4203-88c7-0083097d6684",
+      "name": "Send a message1",
+      "webhookId": "07abc58c-935d-4259-80a8-e9f46b764d77",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "D9Rc3AY7v9JzGAEg",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7377273f-0b61-45e1-bf22-e6a167b77143",
+  "meta": {
+    "instanceId": "95e561f0a17674229591dfae8230e467cc188046d6cc4f73afcfa213cc68aef0"
+  },
+  "id": "PV8auNnV2lj6bLuw",
+  "tags": []
+}

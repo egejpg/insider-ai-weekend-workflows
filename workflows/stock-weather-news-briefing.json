@@ -1,0 +1,238 @@
+{
+  "name": "stock-weather-news-briefing",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "421249e2-8fc0-4a04-9f5e-df9648a75b39",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/weather?q=Istanbul,TR&appid=a474ebe7d6d2c4a2f4da073438faa267",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "86a95fa9-c7d1-443d-95d2-11e4911066e7",
+      "name": "weather"
+    },
+    {
+      "parameters": {
+        "url": "https://finnhub.io/api/v1/company-news?symbol=AAPL&from=2025-11-27&to=2025-12-30&token=d4m29v9r01qr851rfke0d4m29v9r01qr851rfkeg",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        -160
+      ],
+      "id": "eb230458-9b06-4613-a323-223535c405bf",
+      "name": "Apple  News"
+    },
+    {
+      "parameters": {
+        "url": "https://finnhub.io/api/v1/quote?symbol=AAPL&token=d4m29v9r01qr851rfke0d4m29v9r01qr851rfkeg",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        160
+      ],
+      "id": "02539882-96e8-48d0-af45-51673ae5c77f",
+      "name": "AAPL stock"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        640,
+        -16
+      ],
+      "id": "67ad09a0-5255-4aee-9f5d-a7db65b808db",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a helpful AI assistant named DailyBrief, designed to create a personalized daily message for a user named Eren. Your role is to compile and present information in a warm, engaging way that's like chatting with a thoughtful friend—keep it balanced, not overly casual or stiffly formal. Return output in Turkish, while keeping english terms in english. This output will be sent in slack so include emojis.\nYou will be provided with the following variables as input:\n{weather_data}: A summary of today's weather, including temperature, conditions, and any notable forecasts.\n{stock_data}: Latest stock updates/news, such as major indices or specific stocks of interest, with current values and news.\nUsing these variables, generate a daily message that starts with a friendly greeting, then covers the weather, followed by stock updates. Keep the message concise, positive, and conversational, aiming for 200-300 words. Structure it naturally, like this:\nGreeting: Address Eren warmly and mention it's the daily update.\nWeather section: Share the weather info in an relatable way, perhaps suggesting what it means for the day.\nStocks section: MUST Present the stock price and news, mention latest news.\nAlways end on an uplifting note, like wishing Eren a great day. Do not add any extra information beyond what's in the variables, and ensure the tone is encouraging and approachable.\nHere the variables:\n# Weather data\n```\nOverview: {{ $json.weather[0].description }}\nMain: {{ $json.main.toJsonString() }}\nWind: {{ $json.wind.toJsonString() }}\n```\n# Stock Data\n```\nPrice: {{ $json.c }} $\nNews: {{ $('Apple  News').item.toJsonString() }}\n```\n\n\n\n\n\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        880,
+        0
+      ],
+      "id": "dbc3cd3e-4848-4ff8-8f03-e57640653f95",
+      "name": "AI Agent",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        880,
+        208
+      ],
+      "id": "73f9030d-ebfc-4685-b477-612b7d1ad187",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "55WLL7fNZtDJKOiT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A1EGK7JG0",
+          "mode": "list",
+          "cachedResultName": "all-insider-ai-weekend"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1232,
+        0
+      ],
+      "id": "18e39732-ac17-49bd-a2a9-85786353a22d",
+      "name": "Send a message",
+      "webhookId": "3452d09f-ed5e-4e3e-b75f-5b5171eef959",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "1nrH1miNojtBVzEA",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "weather",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Apple  News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AAPL stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apple  News": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "weather": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "AAPL stock": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fb0cb61f-eac2-4033-bc95-9184fe93b74b",
+  "meta": {
+    "instanceId": "95e561f0a17674229591dfae8230e467cc188046d6cc4f73afcfa213cc68aef0"
+  },
+  "id": "RG6b1fOl1hpq8Zob",
+  "tags": []
+}
